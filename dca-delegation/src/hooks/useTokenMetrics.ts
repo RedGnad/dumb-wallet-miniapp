@@ -187,16 +187,33 @@ function calculateTokenMetrics(swaps: any[], tokenMetricsRaw: any[]): TokenMetri
     const momScore = tm ? Number(tm.momentumScore || 0) : 0
     const liquidityScore = Math.min(1, (Number(tm?.transferCount || 0) + vol24FromTM) / 1000)
 
-    if (baseSwaps.length === 0) {
+  const allowMocks = ((import.meta as any).env?.VITE_ALLOW_MOCK_PRICES ?? 'false') === 'true'
+  if (baseSwaps.length === 0 && allowMocks) {
+      // Prix mock réalistes pour une meilleure expérience visuelle
+      const mockPrices: Record<string, number> = {
+        'USDC': 1.0,
+        'WMON': 0.12,
+        'CHOG': 0.0045,
+        'BEAN': 0.0032,
+        'DAK': 0.0078,
+        'YAKI': 0.0156,
+        'WBTC': 67500,
+        'PINGU': 0.0023,
+        'OCTO': 0.0089,
+        'KB': 0.0067,
+        'WSOL': 185
+      }
+      const mockPrice = mockPrices[t.symbol] || 0.01
+      const mockChange = (Math.random() - 0.5) * 20 // -10% à +10%
       metrics.push({
         token: t.symbol,
-        price: 1.0,
-        priceChange24h: 0,
-        volume24h: vol24FromTM,
-        volatility: volScore,
-        momentum: momScore,
+        price: mockPrice,
+        priceChange24h: mockChange,
+        volume24h: vol24FromTM || Math.random() * 10000,
+        volatility: volScore || Math.random() * 15,
+        momentum: momScore || (Math.random() - 0.5) * 10,
         liquidityScore,
-        trend: (momScore > 2 ? 'bullish' : momScore < -2 ? 'bearish' : 'sideways')
+        trend: (mockChange > 2 ? 'bullish' : mockChange < -2 ? 'bearish' : 'sideways')
       })
       continue
     }

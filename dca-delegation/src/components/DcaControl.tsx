@@ -148,6 +148,8 @@ export default function DcaControl() {
   const [tokenMetricKind, setTokenMetricKind] = useState<
     "momentum" | "volatility" | "price"
   >("price");
+  const [selectedTokenForChart, setSelectedTokenForChart] =
+    useState<string>("USDC");
   const [tokenDates, setTokenDates] = useState<string[]>([]);
   const [tokenSeries, setTokenSeries] = useState<
     Record<string, { token: string; points: { x: string; y: number }[] }>
@@ -217,7 +219,8 @@ export default function DcaControl() {
         const ls = localStorage.getItem("envio-endpoint")?.toUpperCase();
         if (ls === "FAST" || ls === "PRECISE") return ls;
       } catch {}
-      return "DEFAULT";
+      // Default to PRECISE when not specified
+      return "PRECISE";
     }
   );
   const applyEnvioMode = useCallback((mode: "FAST" | "PRECISE") => {
@@ -276,7 +279,7 @@ export default function DcaControl() {
   } = useWhaleTransfers(7);
   const { alerts: whaleAlerts } = useWhaleAlerts();
   const whaleMonOnly =
-    (import.meta as any).env?.VITE_WHALE_MON_ONLY !== "false";
+    ((import.meta as any).env?.VITE_WHALE_MON_ONLY ?? "false") === "true";
   const whaleRows = useMemo(() => {
     let rows =
       whaleMoves && whaleMoves.length
@@ -1005,19 +1008,25 @@ export default function DcaControl() {
                     delegationExpired ||
                     (aiEnabled && (metricsLoading || tokenMetricsLoading))
                   }
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
+                  style={{
+                    boxShadow:
+                      "0 0 25px rgba(34, 197, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.2)",
+                  }}
                 >
-                  <Play size={16} />
-                  {aiEnabled ? "Start AI DCA" : "Start DCA"}
+                  {aiEnabled ? "Start AI" : "Start"}
                 </button>
               ) : (
                 <button
                   onClick={() => stopDca()}
                   disabled={isLoading}
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
+                  style={{
+                    boxShadow:
+                      "0 0 25px rgba(239, 68, 68, 0.5), 0 4px 15px rgba(0, 0, 0, 0.2)",
+                  }}
                 >
-                  <Square size={16} />
-                  Stop
+                  {aiEnabled ? "Stop AI" : "Stop"}
                 </button>
               )}
             </div>
@@ -1048,7 +1057,11 @@ export default function DcaControl() {
                     <button
                       onClick={() => topUpMon(monAmount)}
                       disabled={isLoading}
-                      className="px-4 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 text-white font-semibold"
+                      className="px-4 rounded-lg bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold shadow-lg transition-all duration-200"
+                      style={{
+                        boxShadow:
+                          "0 0 20px rgba(147, 51, 234, 0.4), 0 4px 15px rgba(0, 0, 0, 0.2)",
+                      }}
                     >
                       Deposit
                     </button>
@@ -1061,7 +1074,11 @@ export default function DcaControl() {
                   <button
                     onClick={() => convertAllToMon(parseInt(slippageBps))}
                     disabled={isLoading || delegationExpired || !hasConvertible}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
+                    style={{
+                      boxShadow:
+                        "0 0 25px rgba(245, 158, 11, 0.5), 0 4px 15px rgba(0, 0, 0, 0.2)",
+                    }}
                   >
                     <ArrowUpDown size={16} />
                     Convert ALL to MON
@@ -1083,18 +1100,6 @@ export default function DcaControl() {
                       className="accent-purple-500"
                       checked={restakeAi}
                       onChange={(e) => setRestakeAi(e.target.checked)}
-                    />
-                    <span className="text-xs">Enable</span>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Manual DCA restaking</span>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="accent-purple-500"
-                      checked={restakeManual}
-                      onChange={(e) => setRestakeManual(e.target.checked)}
                     />
                     <span className="text-xs">Enable</span>
                   </label>
@@ -1135,21 +1140,6 @@ export default function DcaControl() {
                       >
                         Withdraw
                       </button>
-                    </div>
-                  </div>
-                )}
-                {parseFloat((balances as any).gMON || "0") > 0 && (
-                  <div className="flex justify-between items-center gap-3 flex-wrap">
-                    <span className="text-gray-300 flex items-center gap-2">
-                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-semibold">
-                        g
-                      </span>
-                      gMON
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-mono truncate max-w-[140px]">
-                        {(balances as any).gMON}
-                      </span>
                     </div>
                   </div>
                 )}
@@ -1264,8 +1254,8 @@ export default function DcaControl() {
         <div className="flex items-stretch justify-center gap-4">
           <div className="w-[360px] shrink-0 space-y-4 max-h-[78vh] overflow-y-auto pr-1">
             <div className="glass rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-xl font-semibold text-white flex items-center gap-2">
+              <div className="mb-4">
+                <div className="text-xl font-semibold text-white flex items-center gap-2 mb-3">
                   <Brain size={18} />
                   Autonomous AI Agent
                 </div>
@@ -1288,88 +1278,113 @@ export default function DcaControl() {
                 </label>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 <button
                   onClick={() => setPersonality("conservative")}
-                  className={`py-2 px-3 rounded-lg text-sm ${
+                  className={`py-2 px-3 rounded-lg text-sm transition-all duration-200 ${
                     personality === "conservative"
                       ? "bg-blue-600 text-white"
                       : "bg-white/10 text-gray-300 hover:text-white"
                   }`}
+                  style={
+                    personality === "conservative"
+                      ? { boxShadow: "0 0 20px rgba(37, 99, 235, 0.6)" }
+                      : {}
+                  }
                 >
                   Conservative
                 </button>
                 <button
                   onClick={() => setPersonality("balanced")}
-                  className={`py-2 px-3 rounded-lg text-sm ${
+                  className={`py-2 px-3 rounded-lg text-sm transition-all duration-200 ${
                     personality === "balanced"
                       ? "bg-blue-600 text-white"
                       : "bg-white/10 text-gray-300 hover:text-white"
                   }`}
+                  style={
+                    personality === "balanced"
+                      ? { boxShadow: "0 0 20px rgba(37, 99, 235, 0.6)" }
+                      : {}
+                  }
                 >
                   Balanced
                 </button>
                 <button
                   onClick={() => setPersonality("aggressive")}
-                  className={`py-2 px-3 rounded-lg text-sm ${
+                  className={`py-2 px-3 rounded-lg text-sm transition-all duration-200 ${
                     personality === "aggressive"
                       ? "bg-blue-600 text-white"
                       : "bg-white/10 text-gray-300 hover:text-white"
                   }`}
+                  style={
+                    personality === "aggressive"
+                      ? { boxShadow: "0 0 20px rgba(37, 99, 235, 0.6)" }
+                      : {}
+                  }
                 >
                   Aggressive
                 </button>
                 <button
                   onClick={() => setPersonality("contrarian")}
-                  className={`py-2 px-3 rounded-lg text-sm ${
+                  className={`py-2 px-3 rounded-lg text-sm transition-all duration-200 ${
                     personality === "contrarian"
                       ? "bg-blue-600 text-white"
                       : "bg-white/10 text-gray-300 hover:text-white"
                   }`}
+                  style={
+                    personality === "contrarian"
+                      ? { boxShadow: "0 0 20px rgba(37, 99, 235, 0.6)" }
+                      : {}
+                  }
                 >
                   Contrarian
                 </button>
               </div>
 
               <div className="glass rounded-xl p-4 mb-4">
-                <div className="text-sm text-gray-300 mb-2">AI Status</div>
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`flex items-center gap-2 ${
-                      aiEnabled ? "text-green-400" : "text-gray-400"
-                    }`}
-                  >
+                <div className="text-sm text-gray-300 mb-3">
+                  Status & Personality
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        aiEnabled ? "bg-green-400" : "bg-gray-400"
+                      className={`flex items-center gap-2 ${
+                        aiEnabled ? "text-green-400" : "text-gray-400"
                       }`}
-                    ></div>
-                    {aiEnabled ? "AI Enabled" : "AI Disabled"}
-                  </div>
-                  <div className="text-gray-300">
-                    Personality:{" "}
-                    <span className="text-white capitalize">{personality}</span>
-                  </div>
-                  {isProcessing && (
-                    <div className="flex items-center gap-2 text-yellow-400">
-                      <div className="animate-spin w-3 h-3 border border-yellow-400 border-t-transparent rounded-full"></div>
-                      Processing...
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          aiEnabled ? "bg-green-400" : "bg-gray-400"
+                        }`}
+                      ></div>
+                      {aiEnabled ? "AI Enabled" : "AI Disabled"}
                     </div>
-                  )}
+                    {isProcessing && (
+                      <div className="flex items-center gap-2 text-yellow-400">
+                        <div className="animate-spin w-3 h-3 border border-yellow-400 border-t-transparent rounded-full"></div>
+                        <span className="text-xs">Processing...</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-300">Personality: </span>
+                    <span className="text-white capitalize font-medium">
+                      {personality}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <div className="glass rounded-xl p-4 mb-4">
-                <div className="text-sm text-gray-300 mb-2">AI Provider</div>
-                <div className="flex items-center gap-3 mb-3 text-sm">
+                <div className="text-sm text-gray-300 mb-3">AI Provider</div>
+                <div className="space-y-2">
                   <button
                     onClick={() => setProvider("openai")}
-                    className={`px-3 py-1 rounded-lg flex items-center gap-2 ${
+                    className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 text-sm ${
                       provider === "openai"
                         ? "bg-white/10 text-white"
                         : "bg-white/5 text-gray-300 hover:text-white"
                     }`}
-                    title="active"
                   >
                     <span
                       className={`w-2 h-2 rounded-full ${
@@ -1383,13 +1398,20 @@ export default function DcaControl() {
                     OpenAI
                   </button>
                   <button
-                    onClick={() => setProvider("fortytwo")}
-                    className={`px-3 py-1 rounded-lg flex items-center gap-2 ${
+                    onClick={() => {
+                      setProvider("fortytwo");
+                      try {
+                        if (typeof window !== "undefined")
+                          window.dispatchEvent(
+                            new CustomEvent("ai:quip:fortytwo")
+                          );
+                      } catch {}
+                    }}
+                    className={`w-full px-3 py-2 rounded-lg flex items-center gap-2 text-sm ${
                       provider === "fortytwo"
                         ? "bg-white/10 text-white"
                         : "bg-white/5 text-gray-300 hover:text-white"
                     }`}
-                    title="Coming Soon"
                   >
                     <span
                       className={`w-2 h-2 rounded-full ${
@@ -1398,36 +1420,12 @@ export default function DcaControl() {
                           : "bg-gray-400"
                       }`}
                     ></span>
-                    FortyTwo network (swarm inference)
-                  </button>
-                  <button
-                    onClick={() => setProvider("opengradient")}
-                    className={`px-3 py-1 rounded-lg flex items-center gap-2 ${
-                      provider === "opengradient"
-                        ? "bg-white/10 text-white"
-                        : "bg-white/5 text-gray-300 hover:text-white"
-                    }`}
-                    title="Ready. Needs Devnet Token."
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        provider === "opengradient"
-                          ? "bg-yellow-400"
-                          : "bg-gray-400"
-                      }`}
-                    ></span>
-                    OpenGradient (swarm inference)
+                    FortyTwo Network
+                    <span className="text-xs text-yellow-400 ml-auto">
+                      Coming Soon
+                    </span>
                   </button>
                 </div>
-
-                {provider === "opengradient" && (
-                  <div className="text-xs text-yellow-400">
-                    Ready. Needs Devnet Token.
-                  </div>
-                )}
-                {provider === "fortytwo" && (
-                  <div className="text-xs text-yellow-400">Coming Soon</div>
-                )}
               </div>
 
               {aiError && (
@@ -1436,15 +1434,12 @@ export default function DcaControl() {
                 </div>
               )}
 
-              <div className="text-center py-4">
-                <p className="text-gray-300 text-sm mb-2">
+              <div className="glass rounded-xl p-4">
+                <div className="text-sm text-gray-300 mb-2">How it works</div>
+                <p className="text-gray-400 text-xs leading-relaxed">
                   {aiEnabled
-                    ? "AI will automatically control DCA decisions when started"
-                    : "Enable AI to let the agent make autonomous trading decisions"}
-                </p>
-                <p className="text-gray-400 text-xs">
-                  The AI analyzes market metrics, whale activity, and portfolio
-                  balance to make optimal decisions
+                    ? "AI automatically controls DCA decisions using market metrics, whale activity, and portfolio balance analysis."
+                    : "Enable AI to let the agent make autonomous trading decisions based on real-time market data."}
                 </p>
               </div>
             </div>
@@ -2065,7 +2060,7 @@ export default function DcaControl() {
               disabled={isLoading}
               className="py-3 rounded-xl bg-gradient-to-r from-red-700 to-red-600 text-white font-semibold"
             >
-              Panik
+              Panic
             </button>
           </div>
           <div className="text-sm text-gray-300">
@@ -2084,7 +2079,7 @@ export default function DcaControl() {
           <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-300">
             {delegatorSmartAccount && (
               <div className="flex items-center gap-2">
-                <span>Delegator SA:</span>
+                <span>Smart Account:</span>
                 <span className="font-mono text-gray-200">
                   {delegatorSmartAccount.address.slice(0, 6)}...
                   {delegatorSmartAccount.address.slice(-4)}
@@ -2102,7 +2097,6 @@ export default function DcaControl() {
             )}
             {delegateSmartAccount && (
               <div className="flex items-center gap-2">
-                <span>Delegate SA:</span>
                 <span className="font-mono text-gray-200">
                   {delegateSmartAccount.address.slice(0, 6)}...
                   {delegateSmartAccount.address.slice(-4)}
@@ -2121,22 +2115,30 @@ export default function DcaControl() {
           </div>
           <div className="glass rounded-xl p-4">
             <div className="text-lg font-semibold text-white mb-2">
-              Envio Endpoint
+              Envio Endpoint (Development Settings)
             </div>
             <div className="text-sm text-gray-300 mb-2">
-              Current: <span className="font-mono text-white">{envioMode}</span>{" "}
-              (use URL ?envio=FAST|PRECISE or buttons below)
+              FAST is not precise but up to date, PRECISE is accurate but still
+              syncing, if not available please wait up to 24h or use FAST
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => applyEnvioMode("FAST")}
-                className="px-3 py-2 rounded bg-white/5 text-gray-200 hover:text-white"
+                className={`px-3 py-2 rounded border ${
+                  envioMode === "FAST"
+                    ? "bg-indigo-500/20 text-white border-indigo-400/40"
+                    : "bg-white/5 text-gray-200 hover:text-white border-white/10"
+                }`}
               >
                 Use FAST
               </button>
               <button
                 onClick={() => applyEnvioMode("PRECISE")}
-                className="px-3 py-2 rounded bg-white/5 text-gray-200 hover:text-white"
+                className={`px-3 py-2 rounded border ${
+                  envioMode === "PRECISE"
+                    ? "bg-indigo-500/20 text-white border-indigo-400/40"
+                    : "bg-white/5 text-gray-200 hover:text-white border-white/10"
+                }`}
               >
                 Use PRECISE
               </button>

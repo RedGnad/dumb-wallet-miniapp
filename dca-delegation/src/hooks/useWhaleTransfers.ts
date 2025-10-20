@@ -35,9 +35,9 @@ export function useWhaleTransfers(days: number = 7) {
   const [moves, setMoves] = useState<WhaleMove[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const envioEnabled = (import.meta.env.VITE_ENVIO_ENABLED === 'true')
+  const envioEnabled = ((import.meta.env.VITE_ENVIO_ENABLED ?? 'true') === 'true')
   const whaleEnabled = (import.meta.env.VITE_WHALE_NOTIFICATIONS !== 'false')
-  const whaleMonOnly = (import.meta.env.VITE_WHALE_MON_ONLY !== 'false')
+  const whaleMonOnly = ((import.meta.env.VITE_WHALE_MON_ONLY ?? 'false') === 'true')
   const monThreshold = Number(import.meta.env.VITE_WHALE_MON_THRESHOLD ?? 10000)
 
   // token metrics unused in current UI; keep hook minimal
@@ -71,6 +71,7 @@ export function useWhaleTransfers(days: number = 7) {
         }, abort.signal)
         const rows = res.TokenTransfer || []
         const out: WhaleMove[] = []
+        
         for (const r of rows) {
           const sym = symbolFromAddress(r.tokenAddress)
           if (!sym) continue
@@ -97,7 +98,9 @@ export function useWhaleTransfers(days: number = 7) {
             }
           } catch {}
         }
-        setMoves(out)
+  // Sort newest first for consistent UI
+  out.sort((a, b) => b.blockTimestamp - a.blockTimestamp)
+  setMoves(out)
       } catch (e: any) {
         if (!abort.signal.aborted) setError(e.message || String(e))
       } finally {

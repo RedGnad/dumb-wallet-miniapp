@@ -35,7 +35,7 @@ export function useWhaleAlerts() {
   const [alerts, setAlerts] = useState<WhaleAlert[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const envioEnabled = (import.meta.env.VITE_ENVIO_ENABLED === 'true')
+  const envioEnabled = ((import.meta.env.VITE_ENVIO_ENABLED ?? 'true') === 'true')
   const whaleEnabled = (import.meta.env.VITE_WHALE_NOTIFICATIONS !== 'false')
   const whaleMonOnly = (import.meta.env.VITE_WHALE_MON_ONLY !== 'false')
   const monThreshold = Number(import.meta.env.VITE_WHALE_MON_THRESHOLD ?? 10000)

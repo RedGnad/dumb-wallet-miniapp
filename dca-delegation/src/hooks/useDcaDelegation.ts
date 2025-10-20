@@ -684,20 +684,20 @@ export function useDcaDelegation() {
         console.log('[convertAllToMon] Starting conversion for address:', addr)
         console.log('[convertAllToMon] Current balances:', balances)
 
-        // Pre-create value delegation now (popup here), to avoid popup later during withdraws
-        try {
-          if (address) {
-            const capWei = parseUnits('1000000', 18)
-            await getOrCreateValueDelegation(
-              delegatorSmartAccount,
-              delegateSmartAccount,
-              address as `0x${string}`,
-              capWei
-            )
-          }
-        } catch (e) {
-          console.warn('[convertAllToMon] Pre-create value delegation failed or skipped:', e)
-        }
+        // DISABLED: Pre-create value delegation to avoid extra popup during initialization
+        // try {
+        //   if (address) {
+        //     const capWei = parseUnits('1000000', 18)
+        //     await getOrCreateValueDelegation(
+        //       delegatorSmartAccount,
+        //       delegateSmartAccount,
+        //       address as `0x${string}`,
+        //       capWei
+        //     )
+        //   }
+        // } catch (e) {
+        //   console.warn('[convertAllToMon] Pre-create value delegation failed or skipped:', e)
+        // }
 
         // Convert every ERC20 (excluding WMON) into WMON
         for (const t of Object.values(TOKENS)) {
@@ -868,6 +868,7 @@ export function useDcaDelegation() {
     setIsExecuting(true)
     try {
       const amountWei = parseUnits(amountMon, 18)
+      // URGENT FIX: Only create value delegation when actually needed to avoid extra popups
       const valueDelegation = await getOrCreateValueDelegation(
         delegatorSmartAccount,
         delegateSmartAccount,
@@ -994,18 +995,18 @@ export function useDcaDelegation() {
       try { dcaScheduler.stop() } catch {}
       setDcaStatus(prev => ({ ...prev, isActive: false, nextExecution: undefined }))
     }
-    // Prepare value delegation immediately to show the signature prompt now
+    // URGENT FIX: Disable automatic value delegation creation to avoid extra popup during init
     const latest = await getAllBalances(delegatorSmartAccount.address as `0x${string}`)
     const monWei = parseUnits(latest.MON || '0', 18)
     let vd: any = null
-    if (monWei > 0n) {
-      vd = await getOrCreateValueDelegation(
-        delegatorSmartAccount,
-        delegateSmartAccount,
-        address as `0x${string}`,
-        monWei
-      )
-    }
+    // DISABLED to avoid popup: if (monWei > 0n) {
+    //   vd = await getOrCreateValueDelegation(
+    //     delegatorSmartAccount,
+    //     delegateSmartAccount,
+    //     address as `0x${string}`,
+    //     monWei
+    //   )
+    // }
     // Withdraw ERC20s (no prompt; skips if no valid ERC20 delegation)
     await withdrawAllTokens()
     // Redeem prepared value delegation to transfer MON

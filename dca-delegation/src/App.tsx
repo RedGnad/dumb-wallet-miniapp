@@ -8,6 +8,7 @@ import WhaleNotifications from './components/WhaleNotifications'
 import DcaControl from './components/DcaControl'
 import ModelStage from './components/ModelStage'
 import AiBubbleOverlay from './components/AiBubbleOverlay'
+import AiQuipsOverlay from './components/AiQuipsOverlay'
 import { CHAIN_ID } from './lib/chain'
 import { useAutonomousAi } from './hooks/useAutonomousAi'
 
@@ -26,9 +27,9 @@ function App() {
 
   const modelUrl = (() => {
     const map: Record<string, string> = {
-      conservative: '/models/conservative.glb',
+      conservative: '/placeholder-force-conservative', // FORCER placeholder pour conservative
       balanced: '/models/balanced.glb',
-      aggressive: '/models/aggressive.glb',
+      aggressive: '/placeholder-force-aggressive', // FORCER placeholder pour aggressive
       contrarian: '/models/contrarian.glb',
     }
     return map[personality] || '/model.glb'
@@ -68,6 +69,7 @@ function App() {
       {isConnected && isAuthenticated && <WhaleNotifications />}
       {isAuthenticated && <ModelStage key={personality} modelUrl={modelUrl} />}
       {isAuthenticated && <AiBubbleOverlay />}
+      {isAuthenticated && <AiQuipsOverlay />}
       
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         {!isConnected ? (

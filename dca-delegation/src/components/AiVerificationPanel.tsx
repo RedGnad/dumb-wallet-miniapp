@@ -184,28 +184,28 @@ export default function AiVerificationPanel({ balances, portfolioValueMon, deleg
 
         {/* Verification Explanation */}
         <div className="glass rounded-xl p-4 mb-4">
-          <div className="text-sm text-gray-300 mb-2">🔒 Verification Garantie</div>
+          <div className="text-sm text-gray-300 mb-2">🔒 Verification Guarantee</div>
           <div className="text-white text-sm mb-2">
-            Chaque décision IA est automatiquement vérifiée par 7 règles indépendantes :
+            Each AI decision is automatically verified by 7 independent rules:
           </div>
           <div className="grid md:grid-cols-2 gap-2 text-xs text-gray-400">
-            <div>• Délégation valide</div>
-            <div>• Solde suffisant</div>
-            <div>• Montant raisonnable (≤5%)</div>
-            <div>• Token autorisé</div>
-            <div>• Activité whales acceptable</div>
-            <div>• Limite journalière</div>
-            <div>• Conditions de marché</div>
+            <div>• Valid delegation</div>
+            <div>• Sufficient balance</div>
+            <div>• Reasonable amount (≤5%)</div>
+            <div>• Allowed token</div>
+            <div>• Acceptable whale activity</div>
+            <div>• Daily limit</div>
+            <div>• Market conditions</div>
           </div>
           <div className="mt-2 text-xs text-gray-500">
-            ✅ PASS = Toutes vérifications OK | ⚠️ WARN = Risques mineurs | ❌ FAIL = Décision bloquée
+            ✅ PASS = All checks OK | ⚠️ WARN = Minor risks | ❌ FAIL = Decision blocked
           </div>
         </div>
 
         {isAuditing && (
           <div className="flex items-center gap-2 text-yellow-400 text-sm">
             <div className="animate-spin w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full"/>
-            Vérification en cours...
+            Verification in progress...
           </div>
         )}
       </div>
@@ -213,7 +213,7 @@ export default function AiVerificationPanel({ balances, portfolioValueMon, deleg
       {/* Audit History */}
       {auditHistory.length > 0 && (
         <div className="glass rounded-2xl p-5">
-          <div className="text-lg font-semibold text-white mb-4">Historique des Vérifications</div>
+          <div className="text-lg font-semibold text-white mb-4">Verification History</div>
           <div className="space-y-3 max-h-60 overflow-y-auto">
             {auditHistory.slice(0, 10).map((report) => (
               <div key={report.decision.id} className="glass rounded-lg p-3">
@@ -262,7 +262,7 @@ export default function AiVerificationPanel({ balances, portfolioValueMon, deleg
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="glass rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <div className="text-xl font-semibold text-white">Rapport de Vérification</div>
+              <div className="text-xl font-semibold text-white">Verification Report</div>
               <button 
                 onClick={() => setSelectedReport(null)}
                 className="text-gray-400 hover:text-white"
@@ -274,14 +274,14 @@ export default function AiVerificationPanel({ balances, portfolioValueMon, deleg
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="glass rounded-xl p-4">
-                  <div className="text-sm text-gray-300">Status Global</div>
+                  <div className="text-sm text-gray-300">Overall Status</div>
                   <div className={`flex items-center gap-2 text-lg font-semibold ${getStatusColor(selectedReport.overallStatus).split(' ')[0]}`}>
                     {getStatusIcon(selectedReport.overallStatus)}
                     {selectedReport.overallStatus}
                   </div>
                 </div>
                 <div className="glass rounded-xl p-4">
-                  <div className="text-sm text-gray-300">Score de Risque</div>
+                  <div className="text-sm text-gray-300">Risk Score</div>
                   <div className={`text-lg font-semibold ${selectedReport.riskScore > 50 ? 'text-red-400' : selectedReport.riskScore > 25 ? 'text-yellow-400' : 'text-green-400'}`}>
                     {selectedReport.riskScore}/100
                   </div>
@@ -289,22 +289,22 @@ export default function AiVerificationPanel({ balances, portfolioValueMon, deleg
               </div>
 
               <div className="glass rounded-xl p-4">
-                <div className="text-sm text-gray-300 mb-2">Décision IA</div>
+                <div className="text-sm text-gray-300 mb-2">AI Decision</div>
                 <div className="text-white text-sm">
                   {selectedReport.decision.action.type === 'BUY' && 
-                    `Acheter ${selectedReport.decision.action.amount} ${selectedReport.decision.action.sourceToken} → ${selectedReport.decision.action.targetToken}`
+                    `Buy ${selectedReport.decision.action.amount} ${selectedReport.decision.action.sourceToken} → ${selectedReport.decision.action.targetToken}`
                   }
                   {selectedReport.decision.action.type === 'HOLD' && 
-                    `Attendre ${selectedReport.decision.action.duration}s`
+                    `Hold ${selectedReport.decision.action.duration}s`
                   }
                 </div>
                 <div className="text-gray-400 text-xs mt-1">
-                  Personnalité: {selectedReport.decision.personality} | Confiance: {Math.round(selectedReport.decision.confidence * 100)}%
+                  Personality: {selectedReport.decision.personality} | Confidence: {Math.round(selectedReport.decision.confidence * 100)}%
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm text-gray-300">Résultats des Vérifications</div>
+                <div className="text-sm text-gray-300">Verification Results</div>
                 {selectedReport.results.map((result, index) => (
                   <div key={index} className="glass rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1">
@@ -337,13 +337,13 @@ export default function AiVerificationPanel({ balances, portfolioValueMon, deleg
                   onClick={() => exportForVerification(selectedReport)}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
                 >
-                  <Download size={14}/>Exporter pour Vérification
+                  <Download size={14}/>Export for Verification
                 </button>
                 <button 
                   onClick={() => setSelectedReport(null)}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
                 >
-                  Fermer
+                  Close
                 </button>
               </div>
             </div>

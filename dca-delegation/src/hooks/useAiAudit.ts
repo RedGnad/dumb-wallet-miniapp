@@ -26,7 +26,7 @@ export function useAiAudit() {
         portfolioValueMon,
         delegationExpired,
         maxDailySpend,
-        allowedTokens: getTargetTokens().map(t => t.symbol),
+        allowedTokens: [...getTargetTokens().map(t => t.symbol), 'USDC', 'WMON'], // Inclure USDC et WMON
         maxSlippageBps
       }
 
@@ -46,7 +46,7 @@ export function useAiAudit() {
   const exportForSwarm = useCallback((decision: AiDecision, context: Omit<AuditContext, 'allowedTokens'>) => {
     const fullContext: AuditContext = {
       ...context,
-      allowedTokens: getTargetTokens().map(t => t.symbol)
+      allowedTokens: [...getTargetTokens().map(t => t.symbol), 'USDC', 'WMON'] // Inclure USDC et WMON
     }
     return aiAuditor.exportDecisionContext(decision, fullContext)
   }, [])
