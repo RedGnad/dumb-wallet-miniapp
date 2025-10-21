@@ -24,7 +24,8 @@ export function useProtocolDailyMetrics(metric: ProtocolMetricKey, days = 30) {
     d.setUTCDate(d.getUTCDate() - days)
     d.setUTCHours(0, 0, 0, 0)
     const result = dateISO(d)
-    console.log(`[useProtocolDailyMetrics] since=${result}, days=${days}`)
+    const debugEnvio = (((import.meta as any).env?.VITE_DEBUG_ENVIO ?? 'true') === 'true')
+    if (debugEnvio) console.log(`[useProtocolDailyMetrics] since=${result}, days=${days}`)
     return result
   }, [days])
 
@@ -43,7 +44,8 @@ export function useProtocolDailyMetrics(metric: ProtocolMetricKey, days = 30) {
       if (!initialized) setLoading(true)
       setError(null)
       try {
-        console.log(`[useProtocolDailyMetrics] Querying with since=${since}`)
+  const debugEnvio = (((import.meta as any).env?.VITE_DEBUG_ENVIO ?? 'true') === 'true')
+  if (debugEnvio) console.log(`[useProtocolDailyMetrics] Querying with since=${since}`)
         let data = await queryEnvio<{ DailyMetrics: Array<any> }>({
           query: `query Q($since: String!) {
             DailyMetrics(
@@ -62,7 +64,7 @@ export function useProtocolDailyMetrics(metric: ProtocolMetricKey, days = 30) {
           }`,
           variables: { since }
         }, abort.signal)
-        console.log(`[useProtocolDailyMetrics] Got ${data.DailyMetrics?.length || 0} records`)
+  if (debugEnvio) console.log(`[useProtocolDailyMetrics] Got ${data.DailyMetrics?.length || 0} records`)
         let rows = data.DailyMetrics || []
         if (!rows || rows.length === 0) {
           const fallback = await queryEnvio<{ DailyMetrics: Array<any> }>({
@@ -114,7 +116,8 @@ export function useProtocolDailyMetrics(metric: ProtocolMetricKey, days = 30) {
     }
 
     run()
-    const id = setInterval(run, 20000)
+    const pollMs = Number((import.meta as any).env?.VITE_ENVIO_POLL_MS ?? 15000)
+    const id = setInterval(run, Math.max(10000, pollMs))
     return () => { abort.abort(); clearInterval(id) }
   }, [metric, since, envioEnabled, initialized])
 

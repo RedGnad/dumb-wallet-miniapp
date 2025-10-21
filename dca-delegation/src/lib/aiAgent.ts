@@ -340,7 +340,11 @@ export class AutonomousAiAgent {
       return decision
     } catch (error) {
       console.error('AI decision failed:', error)
-      return this.getFallbackDecision(balances, metrics, portfolioValue)
+      // Ensure fallback decisions are also recorded in history
+      const fallback = this.getFallbackDecision(balances, metrics, portfolioValue)
+      this.decisions.unshift(fallback)
+      this.saveState()
+      return fallback
     }
   }
 

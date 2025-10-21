@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAiRestaking } from '../hooks/useAiRestaking'
+import { useAiRestaking } from "../hooks/useAiRestaking";
 
 // Fun quips shown as ephemeral AI bubbles (no "Last Decision" badge)
 const QUIPS = [
@@ -24,7 +24,8 @@ interface AiQuipsOverlayProps {
 }
 
 export default function AiQuipsOverlay({}: AiQuipsOverlayProps) {
-  const { restakeAi } = useAiRestaking()
+  // Invoke hook for any internal side-effects; no need to read return value here
+  useAiRestaking();
   const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>("hidden");
   const [current, setCurrent] = useState<Quip | null>(null);

@@ -14,14 +14,19 @@ export const publicClient = createPublicClient({
 })
 
 // Bundler client for sending UserOperations via ZeroDev
+// Allow app to boot without AA env in dev: if no RPC, use a noop placeholder transport
+const bundlerRpc = (import.meta as any).env?.VITE_ZERO_DEV_BUNDLER_RPC as string | undefined
+if (!bundlerRpc) console.warn('[aa] Missing VITE_ZERO_DEV_BUNDLER_RPC; AA features disabled in dev until configured')
 export const bundlerClient = createBundlerClient({
   client: publicClient,
-  transport: http(import.meta.env.VITE_ZERO_DEV_BUNDLER_RPC),
+  transport: http(bundlerRpc || 'http://127.0.0.1'),
 })
 
 // Paymaster client for sponsoring UserOperations via ZeroDev
+const paymasterRpc = (import.meta as any).env?.VITE_ZERO_DEV_PAYMASTER_RPC as string | undefined
+if (!paymasterRpc) console.warn('[aa] Missing VITE_ZERO_DEV_PAYMASTER_RPC; AA sponsorship disabled in dev until configured')
 export const paymasterClient = createPaymasterClient({
-  transport: http(import.meta.env.VITE_ZERO_DEV_PAYMASTER_RPC),
+  transport: http(paymasterRpc || 'http://127.0.0.1'),
 })
 
 // Wallet client factory for MetaMask connection
@@ -50,6 +55,8 @@ export function validateEnv() {
   if (missing.length > 0) {
     console.warn('Missing environment variables:', missing)
   }
+  if (!primaryRpc) console.warn('[rpc] No VITE_RPC_URL provided; using default Monad testnet RPC')
+  if (!bundlerRpc || !paymasterRpc) console.warn('[aa] Account abstraction will not work until bundler/paymaster RPCs are set')
   
   return missing.length === 0
 }

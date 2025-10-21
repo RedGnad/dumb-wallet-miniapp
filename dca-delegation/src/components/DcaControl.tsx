@@ -9,8 +9,6 @@ import {
   TOKENS,
 } from "../lib/tokens";
 import {
-  Play,
-  Square,
   ArrowUpDown,
   RefreshCw,
   Copy,
@@ -148,9 +146,12 @@ export default function DcaControl() {
   const [tokenMetricKind, setTokenMetricKind] = useState<
     "momentum" | "volatility" | "price"
   >("price");
-  const [selectedTokenForChart, setSelectedTokenForChart] =
-    useState<string>("USDC");
+  // removed unused selectedTokenForChart state
+  // const [selectedTokenForChart, setSelectedTokenForChart] = useState<string>("USDC");
   const [tokenDates, setTokenDates] = useState<string[]>([]);
+  const [selectedChartToken, setSelectedChartToken] = useState<string | null>(
+    null
+  );
   const [tokenSeries, setTokenSeries] = useState<
     Record<string, { token: string; points: { x: string; y: number }[] }>
   >({});
@@ -184,17 +185,15 @@ export default function DcaControl() {
   const [showEMA9, setShowEMA9] = useState(false);
   const [showEMA21, setShowEMA21] = useState(false);
   const [emaGate, setEmaGate] = useState(false);
+  const [showVolume, setShowVolume] = useState(true);
+  const [showIndicators, setShowIndicators] = useState(false);
+  const [logScale, setLogScale] = useState(false);
+  const [chartUnit, setChartUnit] = useState<"USD" | "%">("%");
+  const MAX_POINTS = Number((import.meta as any).env?.VITE_CHART_POINTS ?? 120);
 
   const [restakeAi, setRestakeAi] = useState<boolean>(() => {
     try {
       return localStorage.getItem("restake-ai") === "1";
-    } catch {
-      return false;
-    }
-  });
-  const [restakeManual, setRestakeManual] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem("restake-manual") === "1";
     } catch {
       return false;
     }
@@ -204,11 +203,6 @@ export default function DcaControl() {
       localStorage.setItem("restake-ai", restakeAi ? "1" : "0");
     } catch {}
   }, [restakeAi]);
-  useEffect(() => {
-    try {
-      localStorage.setItem("restake-manual", restakeManual ? "1" : "0");
-    } catch {}
-  }, [restakeManual]);
 
   const [envioMode, setEnvioMode] = useState<"FAST" | "PRECISE" | "DEFAULT">(
     () => {
@@ -240,35 +234,36 @@ export default function DcaControl() {
     const allowed = getTargetTokens().map((t) => t.symbol);
     const nextSeries = { ...tokenSeries };
     const nextVolSeries = { ...tokenVolSeries };
-    if (tokenMetricKind !== "volatility") {
-      for (const sym of allowed) {
-        const m = tokenMetrics.find((tm) => tm.token === sym);
-        const val = m
-          ? tokenMetricKind === "momentum"
-            ? m.momentum
-            : m.price
-          : 0;
-        const prev = nextSeries[sym]?.points || [];
-        const pts = [...prev, { x: label, y: Number.isFinite(val) ? val : 0 }];
-        while (pts.length > 40) pts.shift();
-        nextSeries[sym] = { token: sym, points: pts };
+    // Always update series for the selected metric (price, momentum, or volatility)
+    for (const sym of allowed) {
+      const m = tokenMetrics.find((tm) => tm.token === sym);
+      const val = m
+        ? tokenMetricKind === "momentum"
+          ? m.momentum
+          : tokenMetricKind === "volatility"
+          ? m.volatility
+          : m.price
+        : 0;
+      const prev = nextSeries[sym]?.points || [];
+      const pts = [...prev, { x: label, y: Number.isFinite(val) ? val : 0 }];
+      while (pts.length > MAX_POINTS) pts.shift();
+      nextSeries[sym] = { token: sym, points: pts };
 
-        const vol = m ? m.volume24h : 0;
-        const prevVol = nextVolSeries[sym]?.points || [];
-        const ptsVol = [
-          ...prevVol,
-          { x: label, y: Number.isFinite(vol) ? vol : 0 },
-        ];
-        while (ptsVol.length > 40) ptsVol.shift();
-        nextVolSeries[sym] = { token: sym, points: ptsVol };
-      }
-      const prevDates = tokenDates || [];
-      const nextDates = [...prevDates, label];
-      while (nextDates.length > 40) nextDates.shift();
-      setTokenSeries(nextSeries);
-      setTokenVolSeries(nextVolSeries);
-      setTokenDates(nextDates);
+      const vol = m ? m.volume24h : 0;
+      const prevVol = nextVolSeries[sym]?.points || [];
+      const ptsVol = [
+        ...prevVol,
+        { x: label, y: Number.isFinite(vol) ? vol : 0 },
+      ];
+      while (ptsVol.length > MAX_POINTS) ptsVol.shift();
+      nextVolSeries[sym] = { token: sym, points: ptsVol };
     }
+    const prevDates = tokenDates || [];
+    const nextDates = [...prevDates, label];
+    while (nextDates.length > MAX_POINTS) nextDates.shift();
+    setTokenSeries(nextSeries);
+    setTokenVolSeries(nextVolSeries);
+    setTokenDates(nextDates);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenMetrics, tokenMetricsLoading, tokenMetricKind]);
 
@@ -1776,71 +1771,153 @@ export default function DcaControl() {
                   }
                   return (
                     <div>
-                      <div className="flex items-center gap-3 mb-2 text-xs text-gray-300">
+                      <div className="flex items-center gap-3 mb-2 text-xs text-gray-300 flex-wrap">
                         {tokenMetricKind === "price" && (
                           <>
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="accent-purple-500"
-                                checked={showMA5}
-                                onChange={(e) => setShowMA5(e.target.checked)}
-                              />{" "}
-                              MA5
-                            </label>
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="accent-purple-500"
-                                checked={showMA15}
-                                onChange={(e) => setShowMA15(e.target.checked)}
-                              />{" "}
-                              MA15
-                            </label>
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="accent-purple-500"
-                                checked={showEMA9}
-                                onChange={(e) => setShowEMA9(e.target.checked)}
-                              />{" "}
-                              EMA9
-                            </label>
-                            <label className="inline-flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                className="accent-purple-500"
-                                checked={showEMA21}
-                                onChange={(e) => setShowEMA21(e.target.checked)}
-                              />{" "}
-                              EMA21
-                            </label>
-                            <label
-                              className="inline-flex items-center gap-1 ml-2"
-                              title="Gate DCA by EMA cross (EMA9 ≥ EMA21)"
+                            <div className="inline-flex items-center gap-2 mr-2">
+                              <button
+                                onClick={() => setChartUnit("USD")}
+                                className={`px-2 py-0.5 rounded ${
+                                  chartUnit === "USD"
+                                    ? "bg-slate-700 text-white"
+                                    : "text-gray-400 hover:text-white"
+                                }`}
+                              >
+                                USD
+                              </button>
+                              <button
+                                onClick={() => setChartUnit("%")}
+                                className={`px-2 py-0.5 rounded ${
+                                  chartUnit === "%"
+                                    ? "bg-slate-700 text-white"
+                                    : "text-gray-400 hover:text-white"
+                                }`}
+                              >
+                                %
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => setShowIndicators((v) => !v)}
+                              className="px-2 py-0.5 rounded bg-white/5 text-gray-300 hover:text-white"
+                              title="Show/hide indicators"
                             >
-                              <input
-                                type="checkbox"
-                                className="accent-emerald-500"
-                                checked={emaGate}
-                                onChange={(e) => setEmaGate(e.target.checked)}
-                              />{" "}
-                              Use EMA cross gate
-                            </label>
-                            <span className="text-gray-500">
-                              for {sym || "selected token"}
-                            </span>
+                              Indicators
+                            </button>
+                            {showIndicators && (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="accent-purple-500"
+                                    checked={logScale}
+                                    onChange={(e) =>
+                                      setLogScale(e.target.checked)
+                                    }
+                                  />{" "}
+                                  Log scale
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="accent-purple-500"
+                                    checked={showMA5}
+                                    onChange={(e) =>
+                                      setShowMA5(e.target.checked)
+                                    }
+                                  />{" "}
+                                  MA5
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="accent-purple-500"
+                                    checked={showMA15}
+                                    onChange={(e) =>
+                                      setShowMA15(e.target.checked)
+                                    }
+                                  />{" "}
+                                  MA15
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="accent-purple-500"
+                                    checked={showEMA9}
+                                    onChange={(e) =>
+                                      setShowEMA9(e.target.checked)
+                                    }
+                                  />{" "}
+                                  EMA9
+                                </label>
+                                <label className="inline-flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    className="accent-purple-500"
+                                    checked={showEMA21}
+                                    onChange={(e) =>
+                                      setShowEMA21(e.target.checked)
+                                    }
+                                  />{" "}
+                                  EMA21
+                                </label>
+                                <label
+                                  className="inline-flex items-center gap-1"
+                                  title="Gate DCA by EMA cross (EMA9 ≥ EMA21)"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="accent-emerald-500"
+                                    checked={emaGate}
+                                    onChange={(e) =>
+                                      setEmaGate(e.target.checked)
+                                    }
+                                  />{" "}
+                                  Use EMA cross gate
+                                </label>
+                                <label
+                                  className="inline-flex items-center gap-1"
+                                  title="Toggle volume bars visibility"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="accent-blue-500"
+                                    checked={showVolume}
+                                    onChange={(e) =>
+                                      setShowVolume(e.target.checked)
+                                    }
+                                  />{" "}
+                                  Show volume
+                                </label>
+                              </div>
+                            )}
                           </>
                         )}
                       </div>
                       <TokenMetricsChart
                         series={baseSeries}
                         dates={tokenDates}
-                        zeroAxis={tokenMetricKind === "momentum"}
+                        zeroAxis={tokenMetricKind !== "price"}
                         overlays={overlays}
                         volBars={(tokenVolSeries[sym]?.points || []).map(
                           (p) => ({ x: p.x, y: p.y })
                         )}
+                        showVolume={showVolume}
+                        selectedToken={selectedChartToken || undefined}
+                        showOnlySelected={true}
+                        logScale={logScale}
+                        normalizeMode={
+                          tokenMetricKind === "price"
+                            ? chartUnit === "%"
+                              ? "pct"
+                              : "none"
+                            : "none"
+                        }
+                        unit={tokenMetricKind === "price" ? chartUnit : "%"}
+                        onSelect={(tok) =>
+                          setSelectedChartToken((prev) =>
+                            prev === tok ? null : tok
+                          )
+                        }
                       />
                     </div>
                   );

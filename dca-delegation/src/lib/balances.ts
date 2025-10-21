@@ -101,7 +101,10 @@ export async function getWmonBalance(address: `0x${string}`) {
 export async function getAllBalances(address: `0x${string}`) {
   // Build balances for all tokens from TOKENS registry
   const entries = await Promise.all(
-    Object.entries(TOKENS).map(async ([symbol, meta]) => {
+    Object.entries(TOKENS)
+      // Skip gMON here and fetch it specifically from StakeManager afterwards
+      .filter(([symbol]) => symbol !== 'gMON')
+      .map(async ([symbol, meta]) => {
       try {
         if (meta.isNative) {
           const bal = await getBalance(publicClient, { address })
@@ -123,6 +126,7 @@ export async function getAllBalances(address: `0x${string}`) {
 
   const map: Record<string, string> = {}
   for (const [sym, val] of entries) map[sym] = val
+  // Fetch gMON balance via StakeManager.gMON() to get the actual token address
   try {
     const gmon = await getGMonAddress()
     if (gmon) {
@@ -133,6 +137,9 @@ export async function getAllBalances(address: `0x${string}`) {
         args: [address],
       })
       map['gMON'] = formatUnits(bal, 18)
+    } else {
+      // Fallback: if we can't resolve gMON address, default to 0.0 without extra RPC
+      map['gMON'] = '0.0'
     }
   } catch {}
   return map

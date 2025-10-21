@@ -151,7 +151,8 @@ export function useWhaleAlerts() {
     }
 
     run()
-    const id = setInterval(run, 20000)
+    const pollMs = Number((import.meta as any).env?.VITE_ENVIO_POLL_MS ?? 15000)
+    const id = setInterval(run, Math.max(15000, pollMs))
     return () => { abort.abort(); clearInterval(id) }
   }, [since, envioEnabled])
 

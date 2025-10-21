@@ -18,6 +18,7 @@ export function useAiAudit() {
     maxSlippageBps: number = 500 // Default 5% slippage
   ): Promise<AuditReport> => {
     setIsAuditing(true)
+    const debugAi = (((import.meta as any).env?.VITE_DEBUG_AI ?? (import.meta as any).env?.VITE_DEBUG_ENVIO ?? 'true') === 'true')
     
     try {
       const context: AuditContext = {
@@ -30,8 +31,27 @@ export function useAiAudit() {
         maxSlippageBps
       }
 
+      if (debugAi) {
+        console.info('[ai] auditing', {
+          decisionId: decision.id,
+          action: decision.action?.type,
+          txToday: context.metrics?.txToday,
+          whales: context.metrics?.whales24h?.length,
+          feesTodayMon: context.metrics?.feesTodayMon,
+          lastUpdatedISO: context.metrics?.lastUpdated ? new Date(context.metrics.lastUpdated).toISOString() : null
+        })
+      }
+
       const report = aiAuditor.audit(decision, context)
       setAuditHistory(aiAuditor.getAuditHistory())
+      if (debugAi) {
+        console.info('[ai] audit-result', {
+          decisionId: decision.id,
+          overallStatus: report.overallStatus,
+          riskScore: report.riskScore,
+          marketRule: report.results.find(r => r.ruleId === 'market-conditions')?.message
+        })
+      }
       
       return report
     } finally {

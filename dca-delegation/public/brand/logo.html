@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dumb Wallet — Minimal Pro Logo</title>
+  <style>
+    :root{
+      --bg: #0a0d17;
+      --fg: #e5e7eb;
+      --violet: #7c3aed;  /* deep violet */
+      --blue: #0ea5e9;    /* neon blue */
+      --whiteA: rgba(255,255,255,0.10);
+      --whiteB: rgba(255,255,255,0.06);
+    }
+    html, body { height: 100%; margin: 0; background: radial-gradient(900px 900px at 70% 20%, rgba(124,58,237,0.12), transparent), radial-gradient(700px 700px at 30% 80%, rgba(14,165,233,0.10), transparent), var(--bg); color: var(--fg); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    .wrap{ display:grid; place-items:center; min-height:100%; padding:24px; }
+    .card{ width:min(92vw,1200px); background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 28px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); backdrop-filter: blur(8px); }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .btn{ background: linear-gradient(90deg,var(--violet),var(--blue)); color:white; border:0; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+    .logo-box{ display:grid; place-items:center; padding:40px; background: rgba(0,0,0,0.30); border:1px solid rgba(255,255,255,0.06); border-radius: 16px; }
+    .tip{ color:#a3a3a3; font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <div style="font-size:18px; font-weight:800; color:white; letter-spacing:.3px;">Dumb Wallet — Minimal Pro Logo</div>
+          <div class="tip">Angles raides, 2–3 couleurs (violet/bleu), glow néon. Export PNG HD (2048/4096).</div>
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="btn" onclick="downloadPng(2048)">Export 2048px</button>
+          <button class="btn" onclick="downloadPng(4096)">Export 4096px</button>
+        </div>
+      </div>
+      <div class="logo-box">
+        <svg id="logoSvg" width="720" height="720" viewBox="0 0 720 720" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- 2-color gradient for strokes/fills -->
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#0ea5e9"/>
+            </linearGradient>
+            <radialGradient id="bgGlow" cx="50%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="10" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <!-- Minimal liquid-glass: translucent fill + soft radial blend (no hard edges) -->
+            <linearGradient id="glassFill" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="white" stop-opacity="0.08"/>
+              <stop offset="55%" stop-color="#7c3aed" stop-opacity="0.05"/>
+              <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.04"/>
+            </linearGradient>
+            <radialGradient id="innerBlend" gradientUnits="userSpaceOnUse" cx="360" cy="360" r="240">
+              <stop offset="0%" stop-color="white" stop-opacity="0.08"/>
+              <stop offset="45%" stop-color="#7c3aed" stop-opacity="0.05"/>
+              <stop offset="80%" stop-color="#0ea5e9" stop-opacity="0.03"/>
+              <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
+            </radialGradient>
+            <clipPath id="clipDiamond">
+              <polygon points="360,120 600,360 360,600 120,360"/>
+            </clipPath>
+          </defs>
+
+          <!-- Background subtle glow -->
+          <circle cx="360" cy="360" r="240" fill="url(#bgGlow)"/>
+
+          <!-- Sharp diamond (rhombus) with neon stroke -->
+          <g>
+            <!-- Outer glowing stroke (sharp neon diamond) -->
+            <polygon points="360,120 600,360 360,600 120,360"
+                     fill="none" stroke="url(#lineGrad)" stroke-width="10" filter="url(#softGlow)" />
+
+            <!-- Subtle liquid-glass body (very low reflection) -->
+            <g clip-path="url(#clipDiamond)">
+              <!-- faint inner edge glow -->
+              <polygon points="360,120 600,360 360,600 120,360"
+                       fill="none" stroke="url(#lineGrad)" stroke-width="18" opacity="0.06" filter="url(#softGlow)"/>
+              <!-- translucent fill -->
+              <polygon points="360,120 600,360 360,600 120,360"
+                       fill="url(#glassFill)" stroke="rgba(255,255,255,0.10)" stroke-width="1" />
+              <!-- soft radial blend to avoid rectangular demarcation -->
+              <circle cx="360" cy="360" r="240" fill="url(#innerBlend)" />
+            </g>
+
+            <!-- Minimal center neon dot -->
+            <circle cx="360" cy="360" r="16" fill="none" stroke="url(#lineGrad)" stroke-width="6" filter="url(#softGlow)" />
+          </g>
+
+          
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function hexToRgba(hex, a){
+      const h = hex.replace('#','').trim()
+      const bigint = parseInt(h.length===3 ? h.split('').map(ch=>ch+ch).join('') : h, 16)
+      const r = (bigint >> 16) & 255
+      const g = (bigint >> 8) & 255
+      const b = bigint & 255
+      return `rgba(${r},${g},${b},${a})`
+    }
+
+    async function downloadPng(size){
+      const svg = document.getElementById('logoSvg')
+      const clone = svg.cloneNode(true)
+      const s = size
+      clone.setAttribute('width', String(s))
+      clone.setAttribute('height', String(s))
+      clone.setAttribute('viewBox', '0 0 720 720')
+      const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      const cnv = document.createElement('canvas')
+      cnv.width = s; cnv.height = s
+      const ctx = cnv.getContext('2d')
+
+      // Paint page-like background (no transparency)
+      const styles = getComputedStyle(document.documentElement)
+      const bg = (styles.getPropertyValue('--bg') || '#0a0d17').trim()
+      const violet = (styles.getPropertyValue('--violet') || '#7c3aed').trim()
+      const blue = (styles.getPropertyValue('--blue') || '#0ea5e9').trim()
+
+      // base fill
+      ctx.fillStyle = bg
+      ctx.fillRect(0,0,s,s)
+      // violet radial gradient (approx body CSS)
+      let g1 = ctx.createRadialGradient(s*0.70, s*0.20, 0, s*0.70, s*0.20, s*0.60)
+      g1.addColorStop(0, hexToRgba(violet, 0.12))
+      g1.addColorStop(1, hexToRgba(violet, 0.00))
+      ctx.fillStyle = g1
+      ctx.fillRect(0,0,s,s)
+      // blue radial gradient
+      let g2 = ctx.createRadialGradient(s*0.30, s*0.80, 0, s*0.30, s*0.80, s*0.50)
+      g2.addColorStop(0, hexToRgba(blue, 0.10))
+      g2.addColorStop(1, hexToRgba(blue, 0.00))
+      ctx.fillStyle = g2
+      ctx.fillRect(0,0,s,s)
+
+      // Draw SVG on top
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url })
+      ctx.drawImage(img, 0, 0, s, s)
+      URL.revokeObjectURL(url)
+
+      // Save PNG
+      const a = document.createElement('a')
+      a.download = `dumb-wallet-logo-${s}.png`
+      a.href = cnv.toDataURL('image/png')
+      a.click()
+    }
+  </script>
+</body>
+</html>
