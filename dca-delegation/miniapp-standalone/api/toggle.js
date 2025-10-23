@@ -27,14 +27,11 @@ module.exports = async function handler(req, res) {
       let plan = {};
       try { plan = JSON.parse(buff.toString('utf-8')); } catch {}
       // 2) update enabled/mode and nextExecution to immediate
-      const nowSec = Math.floor(Date.now()/1000);
+      const now = new Date().toISOString();
       plan.enabled = !!enabled;
-      if (plan.enabled) {
-        plan.mode = plan.mode || 'ai';
-        plan.nextExecution = nowSec; // trigger next tick asap
-      } else {
-        plan.mode = 'off';
-      }
+      plan.mode = plan.enabled ? (plan.mode || 'ai') : 'off';
+      plan.nextRun = now; // ISO triggers immediate run per new worker logic
+      delete plan.nextExecution;
       const newContent = Buffer.from(JSON.stringify(plan, null, 2), 'utf-8').toString('base64');
       // 3) put updated file
       const putUrl = `${api}/repos/${repo}/contents/${encodeURIComponent(path)}`;

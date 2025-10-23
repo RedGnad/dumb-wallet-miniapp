@@ -7,12 +7,20 @@ module.exports = async function handler(req, res) {
     // Option A: read status directly from a plan.json hosted in your worker repo (raw URL)
     const planUrl = process.env.WORKER_PLAN_URL;
     if (planUrl) {
-      const r = await fetch(planUrl, { headers: { 'accept': 'application/json' } });
+      const ts = Date.now();
+      const sep = planUrl.includes('?') ? '&' : '?';
+      const r = await fetch(`${planUrl}${sep}t=${ts}`, {
+        headers: { 'accept': 'application/json' },
+        cache: 'no-store'
+      });
       if (!r.ok) throw new Error(`plan fetch ${r.status}`)
       const plan = await r.json();
       const aiEnabled = plan.enabled !== false && plan.mode !== 'off';
-      const nextRunISO = plan.nextExecution ? new Date(plan.nextExecution * 1000).toISOString() : null;
-      return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastUserOpHash: plan.lastUserOpHash || null, metrics: plan.metrics || {} })
+      const nextRunISO = plan.nextRun || (plan.nextExecution ? new Date(plan.nextExecution * 1000).toISOString() : null);
+      const lastRunISO = plan.lastRun || (plan.lastRunAt ? new Date(plan.lastRunAt * 1000).toISOString() : null);
+      const lastUserOpHash = plan.lastUserOpHash || plan.lastTxHash || null;
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastRunISO, lastUserOpHash, metrics: plan.metrics || {} })
     }
     // Option B: proxy a custom status backend if provided
     const workerUrl = process.env.WORKER_STATUS_URL;
