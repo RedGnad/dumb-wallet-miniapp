@@ -14,8 +14,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/miniapp", "destination": "/miniapp/index.html" },
-    { "source": "/miniapp/", "destination": "/miniapp/index.html" }
+    { "source": "/miniapp", "destination": "/miniapp-standalone/index.html" },
+    { "source": "/miniapp/", "destination": "/miniapp-standalone/index.html" }
   ],
   "cleanUrls": true
 }
