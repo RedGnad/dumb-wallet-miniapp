@@ -29,7 +29,9 @@
       <div class="card">
         <div class="row"><div style="font-weight:700;color:white">Dumb Wallet</div><span class="tag">Mini App</span></div>
         <div class="row"><div>Status</div><div id="status" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">loading…</div></div>
-        <div class="row"><div>AI Control</div><button id="toggle" class="btn">Toggle</button></div>
+        <div class="row"><div>AI</div><button id="toggle" class="btn">Activer</button></div>
+        <div class="row" id="nextRow" style="display:none"><div>Prochaine exécution</div><div id="next"></div></div>
+        <div class="row" id="lastRow" style="display:none"><div>Dernière UserOp</div><div id="uop"></div></div>
         <div class="row"><small style="opacity:.7">Prototype – aucune clé côté client</small></div>
       </div>
     </div>
@@ -37,6 +39,10 @@
       import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
       const elStatus = document.getElementById('status')
       const elToggle = document.getElementById('toggle')
+      const elNextRow = document.getElementById('nextRow')
+      const elLastRow = document.getElementById('lastRow')
+      const elNext = document.getElementById('next')
+      const elUop = document.getElementById('uop')
       let enabled = false
       try {
         await sdk.ready()
@@ -44,10 +50,48 @@
       } catch (e) {
         elStatus.textContent = 'ready (fallback)'
       }
-      elToggle.addEventListener('click', () => {
-        enabled = !enabled
-        elStatus.textContent = enabled ? 'AI: on' : 'AI: off'
+      async function refresh() {
+        try {
+          const r = await fetch('/api/status', { headers: { 'accept': 'application/json' } })
+          const j = await r.json()
+          if (!j.ok) throw new Error(j.error || 'status failed')
+          enabled = !!j.aiEnabled
+          elStatus.textContent = enabled ? 'AI: on' : 'AI: off'
+          if (j.nextRunISO) {
+            elNextRow.style.display = 'flex'
+            elNext.textContent = new Date(j.nextRunISO).toLocaleString()
+          } else {
+            elNextRow.style.display = 'none'
+          }
+          if (j.lastUserOpHash) {
+            elLastRow.style.display = 'flex'
+            elUop.innerHTML = `<a href="#" style="color:#93c5fd">${j.lastUserOpHash.slice(0,10)}…</a>`
+          } else {
+            elLastRow.style.display = 'none'
+          }
+          elToggle.textContent = enabled ? 'Désactiver' : 'Activer'
+        } catch (e) {
+          elStatus.textContent = 'offline'
+        }
+      }
+      elToggle.addEventListener('click', async () => {
+        try {
+          const r = await fetch('/api/toggle', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+            body: JSON.stringify({ enabled: !enabled })
+          })
+          const j = await r.json()
+          if (!j.ok) throw new Error(j.error || 'toggle failed')
+          enabled = !!j.aiEnabled
+          elStatus.textContent = enabled ? 'AI: on' : 'AI: off'
+          elToggle.textContent = enabled ? 'Désactiver' : 'Activer'
+        } catch (e) {
+          elStatus.textContent = 'error'
+        }
       })
+      refresh()
+      setInterval(refresh, 10000)
     </script>
   </body>
 </html>
