@@ -9,7 +9,9 @@ module.exports = async function handler(req, res) {
     if (planUrl) {
       const ts = Date.now();
       const sep = planUrl.includes('?') ? '&' : '?';
-      const r = await fetch(`${planUrl}${sep}t=${ts}`, {
+      const sourceUrl = `${planUrl}${sep}t=${ts}`;
+      console.log('[miniapp/status] fetching plan', { url: sourceUrl });
+      const r = await fetch(sourceUrl, {
         headers: { 'accept': 'application/json' },
         cache: 'no-store'
       });
@@ -20,16 +22,19 @@ module.exports = async function handler(req, res) {
       const lastRunISO = plan.lastRun || (plan.lastRunAt ? new Date(plan.lastRunAt * 1000).toISOString() : null);
       const lastUserOpHash = plan.lastUserOpHash || plan.lastTxHash || null;
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastRunISO, lastUserOpHash, metrics: plan.metrics || {} })
+      console.log('[miniapp/status] plan summary', { aiEnabled, mode: plan.mode, enabled: plan.enabled, nextRunISO, lastRunISO });
+      return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastRunISO, lastUserOpHash, metrics: plan.metrics || {}, rawMode: plan.mode, rawEnabled: plan.enabled, sourceUrl })
     }
     // Option B: proxy a custom status backend if provided
     const workerUrl = process.env.WORKER_STATUS_URL;
     if (workerUrl) {
+      console.log('[miniapp/status] proxying to worker', { url: workerUrl });
       const r = await fetch(workerUrl, { headers: { 'accept': 'application/json' } });
       const data = await r.json();
       return res.status(200).json({ ok: true, source: 'worker', ...data });
     }
     // Mock
+    console.log('[miniapp/status] mock response');
     return res.status(200).json({
       ok: true,
       source: 'mock',
@@ -39,6 +44,7 @@ module.exports = async function handler(req, res) {
       metrics: { txToday: 0, lastError: null }
     });
   } catch (e) {
+    console.error('[miniapp/status] error', e);
     return res.status(500).json({ ok: false, error: String(e) });
   }
 }
