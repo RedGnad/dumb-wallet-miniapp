@@ -24,13 +24,20 @@ module.exports = async function handler(req, res) {
       const buff = Buffer.from(gjson.content || '', 'base64');
       let plan = {};
       try { plan = JSON.parse(buff.toString('utf-8')); } catch {}
-      const nowSec = Math.floor(Date.now()/1000);
-      plan.enabled = !!enabled;
-      if (plan.enabled) {
-        plan.mode = plan.mode || 'ai';
-        plan.nextExecution = nowSec; // trigger asap
-      } else {
-        plan.mode = 'off';
+      const now = new Date();
+      const nowSec = Math.floor(now.getTime()/1000);
+      // Update according to existing schema: prefer 'enabled' if present, otherwise use 'mode'
+      if (Object.prototype.hasOwnProperty.call(plan, 'enabled')) {
+        plan.enabled = !!enabled;
+      }
+      // Always set mode for clarity in this schema
+      plan.mode = !!enabled ? 'ai' : 'off';
+      // Support both shapes for scheduling:
+      // - If the plan uses nextRun (ISO), set it to now to trigger soon
+      // - If the plan uses nextExecution (epoch sec), set it accordingly
+      plan.nextRun = now.toISOString();
+      if (Object.prototype.hasOwnProperty.call(plan, 'nextExecution')) {
+        plan.nextExecution = nowSec;
       }
       const newContent = Buffer.from(JSON.stringify(plan, null, 2), 'utf-8').toString('base64');
       const putUrl = `${api}/repos/${repo}/contents/${encodeURIComponent(path)}`;

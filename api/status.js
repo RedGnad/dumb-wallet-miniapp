@@ -11,9 +11,30 @@ module.exports = async function handler(req, res) {
         const r = await fetch(planUrl, { headers: { 'accept': 'application/json' } });
         if (r.ok) {
           const plan = await r.json();
-          const aiEnabled = typeof plan.enabled === 'boolean' ? !!plan.enabled : (plan.mode ? plan.mode !== 'off' : false);
-          const nextRunISO = plan.nextExecution ? new Date(plan.nextExecution * 1000).toISOString() : null;
-          return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, plan });
+          const aiEnabled = typeof plan.enabled === 'boolean'
+            ? !!plan.enabled
+            : (plan.mode ? String(plan.mode).toLowerCase() !== 'off' : false);
+          // Accept multiple shapes: nextRun (ISO), nextExecution (seconds or ms)
+          let nextRunISO = null;
+          if (plan.nextRun) {
+            const d = new Date(plan.nextRun);
+            if (!isNaN(d)) nextRunISO = d.toISOString();
+          }
+          if (!nextRunISO && plan.nextExecution != null) {
+            const t = Number(plan.nextExecution);
+            if (!Number.isNaN(t)) {
+              const ms = t > 1e12 ? t : t * 1000; // support sec or ms
+              const d = new Date(ms);
+              if (!isNaN(d)) nextRunISO = d.toISOString();
+            }
+          }
+          // Optional: expose lastRun if present
+          let lastRunISO = null;
+          if (plan.lastRun) {
+            const d = new Date(plan.lastRun);
+            if (!isNaN(d)) lastRunISO = d.toISOString();
+          }
+          return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastRunISO, plan });
         }
       } catch (_) { /* fallthrough to worker/mock */ }
     }
