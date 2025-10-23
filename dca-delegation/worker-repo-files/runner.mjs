@@ -86,9 +86,10 @@ async function main() {
   const delegatePk = requireEnv('VITE_DELEGATE_PRIVATE_KEY')
   const dryRun = (process.env.DRY_RUN || '0') === '1'
   const allowTestTx = (process.env.ALLOW_TEST_TX || '0') === '1'
+  const useDTK = (process.env.USE_DTK || '0') === '1'
 
   const { plan, planPath } = readPlan()
-  // Prepare execution function (EOA heartbeat / optional test tx)
+  // Prepare execution function (DTK or EOA heartbeat / optional test tx)
   const execFn = async () => {
     if (!rpc || !delegatePk) {
       console.log('[worker] Missing RPC or PRIVATE_KEY, skipping on-chain action.')
@@ -104,6 +105,29 @@ async function main() {
       console.log('[worker] Signed heartbeat:', sig.slice(0, 18) + '…')
     } catch (e) {
       console.warn('[worker] signMessage failed:', e?.message || e)
+    }
+
+    if (useDTK) {
+      // Guarded DTK path. Keep logs minimal and safe when package/API differs.
+      if (!bundler || !paymaster) {
+        console.log('[worker] USE_DTK=1 but missing bundler/paymaster RPC. Skipping DTK path.')
+      } else {
+        try {
+          // Lazy import to avoid startup error if package changes
+          const dtk = await import('@metamask/delegation-toolkit').catch(() => null)
+          if (!dtk) {
+            console.log('[worker] Delegation Toolkit not available. Skipping DTK path.')
+          } else {
+            console.log('[worker] DTK stub: initialize client (no-op).')
+            // TODO: initialize DTK client with bundler/paymaster and submit a no-op user operation.
+            // For now, we exit early to avoid unintended on-chain operations.
+            return { ok: true }
+          }
+        } catch (e) {
+          console.warn('[worker] DTK init failed:', e?.message || e)
+        }
+      }
+      // Fall through to EOA path as a heartbeat/micro-tx
     }
 
     if (dryRun) {

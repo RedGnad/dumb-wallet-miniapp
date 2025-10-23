@@ -10,6 +10,7 @@ Ajouter ces secrets dans GitHub Actions :
 - `VITE_ZERO_DEV_BUNDLER_RPC` 
 - `VITE_ZERO_DEV_PAYMASTER_RPC`
 - `VITE_DELEGATE_PRIVATE_KEY`
+- `USE_DTK` ("1" pour activer le chemin Delegation Toolkit; sinon EOA)
 
 Optionnels pour le contrôle d'exécution :
 
@@ -37,4 +38,5 @@ Le worker :
 - si `mode: off`, il reprogramme simplement `nextRun`
 - signe un message de heartbeat avec l'EOA (toujours que possible)
 - si `DRY_RUN=0` et `ALLOW_TEST_TX=1`, envoie un micro-tx à soi-même pour valider la pipeline (testnet)
+- si `USE_DTK=1` et bundler/paymaster présents, initialise DTK (stub no-op pour l'instant), sinon fallback EOA
 - écrit `lastRun`, `nextRun` et éventuellement `lastTxHash` dans `plan.json`
