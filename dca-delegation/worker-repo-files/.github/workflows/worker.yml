@@ -25,6 +25,8 @@ jobs:
           VITE_ZERO_DEV_BUNDLER_RPC: ${{ secrets.VITE_ZERO_DEV_BUNDLER_RPC }}
           VITE_ZERO_DEV_PAYMASTER_RPC: ${{ secrets.VITE_ZERO_DEV_PAYMASTER_RPC }}
           VITE_DELEGATE_PRIVATE_KEY: ${{ secrets.VITE_DELEGATE_PRIVATE_KEY }}
+          DRY_RUN: ${{ secrets.DRY_RUN }}
+          ALLOW_TEST_TX: ${{ secrets.ALLOW_TEST_TX }}
       - name: Commit plan updates (if any)
         run: |
           git config user.name "github-actions"
