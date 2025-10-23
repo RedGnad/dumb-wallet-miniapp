@@ -4,42 +4,25 @@
 
 module.exports = async function handler(req, res) {
   try {
-    // Option A: read plan.json directly to derive status
+    // Option A: read status directly from a plan.json hosted in your worker repo (raw URL)
     const planUrl = process.env.WORKER_PLAN_URL;
     if (planUrl) {
-      try {
-        const url = planUrl.includes('?') ? `${planUrl}&_ts=${Date.now()}` : `${planUrl}?_ts=${Date.now()}`;
-        const r = await fetch(url, { headers: { 'accept': 'application/json', 'cache-control': 'no-cache' } });
-        if (r.ok) {
-          const plan = await r.json();
-          const aiEnabled = typeof plan.enabled === 'boolean'
-            ? !!plan.enabled
-            : (plan.mode ? String(plan.mode).toLowerCase() !== 'off' : false);
-          // Accept multiple shapes: nextRun (ISO), nextExecution (seconds or ms)
-          let nextRunISO = null;
-          if (plan.nextRun) {
-            const d = new Date(plan.nextRun);
-            if (!isNaN(d)) nextRunISO = d.toISOString();
-          }
-          if (!nextRunISO && plan.nextExecution != null) {
-            const t = Number(plan.nextExecution);
-            if (!Number.isNaN(t)) {
-              const ms = t > 1e12 ? t : t * 1000; // support sec or ms
-              const d = new Date(ms);
-              if (!isNaN(d)) nextRunISO = d.toISOString();
-            }
-          }
-          // Optional: expose lastRun if present
-          let lastRunISO = null;
-          if (plan.lastRun) {
-            const d = new Date(plan.lastRun);
-            if (!isNaN(d)) lastRunISO = d.toISOString();
-          }
-          return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastRunISO, plan });
-        }
-      } catch (_) { /* fallthrough to worker/mock */ }
+      const ts = Date.now();
+      const sep = planUrl.includes('?') ? '&' : '?';
+      const r = await fetch(`${planUrl}${sep}t=${ts}`, {
+        headers: { 'accept': 'application/json' },
+        cache: 'no-store'
+      });
+      if (!r.ok) throw new Error(`plan fetch ${r.status}`)
+      const plan = await r.json();
+      const aiEnabled = plan.enabled !== false && plan.mode !== 'off';
+      const nextRunISO = plan.nextRun || (plan.nextExecution ? new Date(plan.nextExecution * 1000).toISOString() : null);
+      const lastRunISO = plan.lastRun || (plan.lastRunAt ? new Date(plan.lastRunAt * 1000).toISOString() : null);
+      const lastUserOpHash = plan.lastUserOpHash || plan.lastTxHash || null;
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastRunISO, lastUserOpHash, metrics: plan.metrics || {} })
     }
-    // Option B: proxy to a real worker status endpoint
+    // Option B: proxy a custom status backend if provided
     const workerUrl = process.env.WORKER_STATUS_URL;
     if (workerUrl) {
       const r = await fetch(workerUrl, { headers: { 'accept': 'application/json' } });
