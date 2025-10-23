@@ -2,8 +2,19 @@
 // If WORKER_STATUS_URL is set, this proxies to your backend/worker.
 // Otherwise returns a mock payload so the UI works without wiring.
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
+    // Option A: read status directly from a plan.json hosted in your worker repo (raw URL)
+    const planUrl = process.env.WORKER_PLAN_URL;
+    if (planUrl) {
+      const r = await fetch(planUrl, { headers: { 'accept': 'application/json' } });
+      if (!r.ok) throw new Error(`plan fetch ${r.status}`)
+      const plan = await r.json();
+      const aiEnabled = plan.enabled !== false && plan.mode !== 'off';
+      const nextRunISO = plan.nextExecution ? new Date(plan.nextExecution * 1000).toISOString() : null;
+      return res.status(200).json({ ok: true, source: 'plan', aiEnabled, nextRunISO, lastUserOpHash: plan.lastUserOpHash || null, metrics: plan.metrics || {} })
+    }
+    // Option B: proxy a custom status backend if provided
     const workerUrl = process.env.WORKER_STATUS_URL;
     if (workerUrl) {
       const r = await fetch(workerUrl, { headers: { 'accept': 'application/json' } });

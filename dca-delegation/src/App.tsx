@@ -10,6 +10,7 @@ import ModelStage from "./components/ModelStage";
 import AiBubbleOverlay from "./components/AiBubbleOverlay";
 import AiQuipsOverlay from "./components/AiQuipsOverlay";
 import EnvioStatusBadge from "./components/EnvioStatusBadge";
+import DebugPanel from "./components/DebugPanel";
 import { CHAIN_ID } from "./lib/chain";
 import { useAutonomousAi } from "./hooks/useAutonomousAi";
 
@@ -30,9 +31,9 @@ function App() {
 
   const modelUrl = (() => {
     const map: Record<string, string> = {
-      conservative: "/placeholder-force-conservative", // FORCER placeholder pour conservative
+      conservative: "/models/conservative.glb",
       balanced: "/models/balanced.glb",
-      aggressive: "/placeholder-force-aggressive", // FORCER placeholder pour aggressive
+      aggressive: "/models/aggressive.glb",
       contrarian: "/models/contrarian.glb",
     };
     return map[personality] || "/model.glb";
@@ -73,6 +74,7 @@ function App() {
       {isAuthenticated && <ModelStage key={personality} modelUrl={modelUrl} />}
       {isAuthenticated && <AiBubbleOverlay />}
       {isAuthenticated && <AiQuipsOverlay />}
+  {isAuthenticated && <DebugPanel />}
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         {!isConnected ? (
