@@ -2,7 +2,7 @@
 // If WORKER_STATUS_URL is set, this proxies to your backend/worker.
 // Otherwise returns a mock payload so the UI works without wiring.
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const workerUrl = process.env.WORKER_STATUS_URL;
     if (workerUrl) {

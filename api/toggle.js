@@ -2,7 +2,7 @@
 // POST { enabled: boolean }
 // If WORKER_TOGGLE_URL is set, forwards to your backend/worker. Otherwise stores nothing and responds with the requested state.
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
