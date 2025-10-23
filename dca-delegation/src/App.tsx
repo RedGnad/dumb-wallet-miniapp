@@ -11,6 +11,7 @@ import AiBubbleOverlay from "./components/AiBubbleOverlay";
 import AiQuipsOverlay from "./components/AiQuipsOverlay";
 import EnvioStatusBadge from "./components/EnvioStatusBadge";
 import DebugPanel from "./components/DebugPanel";
+import PlanStatusBadge from "./components/PlanStatusBadge";
 import { CHAIN_ID } from "./lib/chain";
 import { useAutonomousAi } from "./hooks/useAutonomousAi";
 
@@ -70,7 +71,8 @@ function App() {
       <Background />
       <ParticlesLayer />
       {isConnected && isAuthenticated && <WhaleNotifications />}
-      {isConnected && isAuthenticated && <EnvioStatusBadge />}
+  {isConnected && isAuthenticated && <EnvioStatusBadge />}
+  {isAuthenticated && <PlanStatusBadge />}
       {isAuthenticated && <ModelStage key={personality} modelUrl={modelUrl} />}
       {isAuthenticated && <AiBubbleOverlay />}
       {isAuthenticated && <AiQuipsOverlay />}
