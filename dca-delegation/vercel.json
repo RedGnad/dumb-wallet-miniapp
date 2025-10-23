@@ -15,7 +15,8 @@
   ],
   "rewrites": [
     { "source": "/miniapp", "destination": "/miniapp-standalone/index.html" },
-    { "source": "/miniapp/", "destination": "/miniapp-standalone/index.html" }
+    { "source": "/miniapp/", "destination": "/miniapp-standalone/index.html" },
+    { "source": "/.well-known/farcaster.json", "destination": "/api/farcaster.json" }
   ],
   "cleanUrls": true
 }

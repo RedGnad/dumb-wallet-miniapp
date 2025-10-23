@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dumb Wallet Mini App</title>
     <meta name="description" content="Dumb Wallet – Farcaster Mini App" />
+  <!-- Farcaster Mini App Embed (for sharing) -->
+  <meta name="fc:miniapp" content='{"version":"1","imageUrl":"/og.png","button":{"title":"🚀 Ouvrir","action":{"type":"launch_miniapp","url":"/miniapp","name":"Dumb Wallet"}}}'>
     <!-- Farcaster Mini App Metadata -->
     <meta property="fc:miniapp:version" content="1" />
     <meta property="fc:miniapp:name" content="Dumb Wallet" />
@@ -28,7 +30,9 @@
     <div class="wrap">
       <div class="card">
         <div class="row"><div style="font-weight:700;color:white">Dumb Wallet</div><span class="tag">Mini App</span></div>
-        <div class="row"><div>Status</div><div id="status" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">loading…</div></div>
+  <div class="row"><div>Status</div><div id="status" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">loading…</div></div>
+  <div class="row"><div>Wallet</div><div id="addr" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">non connecté</div></div>
+  <div class="row"><div>Compte</div><button id="connect" class="btn">Connecter</button></div>
         <div class="row"><div>AI</div><button id="toggle" class="btn">Activer</button></div>
         <div class="row" id="nextRow" style="display:none"><div>Prochaine exécution</div><div id="next"></div></div>
         <div class="row" id="lastRow" style="display:none"><div>Dernière UserOp</div><div id="uop"></div></div>
@@ -38,12 +42,16 @@
     <script type="module">
       import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
       const elStatus = document.getElementById('status')
-      const elToggle = document.getElementById('toggle')
+  const elToggle = document.getElementById('toggle')
+  const elConnect = document.getElementById('connect')
+  const elAddr = document.getElementById('addr')
       const elNextRow = document.getElementById('nextRow')
       const elLastRow = document.getElementById('lastRow')
       const elNext = document.getElementById('next')
       const elUop = document.getElementById('uop')
-      let enabled = false
+  let enabled = false
+  let provider = null
+  let address = null
       try {
         await sdk.ready()
         elStatus.textContent = 'ready'
@@ -74,6 +82,25 @@
           elStatus.textContent = 'offline'
         }
       }
+      async function connectWallet() {
+        try {
+          await sdk.ready()
+          provider = await sdk.wallet.getEthereumProvider()
+          const accounts = await provider.request({ method: 'eth_requestAccounts' })
+          address = accounts && accounts[0] ? String(accounts[0]) : null
+          if (address) {
+            elAddr.textContent = address.slice(0, 6) + '…' + address.slice(-4)
+            elStatus.textContent = (enabled ? 'AI: on' : 'AI: off') + ' • connecté'
+          } else {
+            elAddr.textContent = 'non connecté'
+          }
+        } catch (e) {
+          elAddr.textContent = 'erreur connexion'
+        }
+      }
+
+      elConnect.addEventListener('click', connectWallet)
+
       elToggle.addEventListener('click', async () => {
         try {
           const r = await fetch('/api/toggle', {
