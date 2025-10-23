@@ -15,6 +15,7 @@ module.exports = async function handler(req, res) {
     const path = process.env.WORKER_PLAN_PATH || 'plan.json';
     const branch = process.env.WORKER_PLAN_BRANCH || 'main';
     if (ghToken && repo) {
+      console.log('toggle: updating github plan', { repo, path, branch, enabled: !!enabled });
       const api = 'https://api.github.com';
       const getUrl = `${api}/repos/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
   const gr = await fetch(getUrl, { headers: { 'authorization': `Bearer ${ghToken}`, 'accept': 'application/vnd.github+json', 'user-agent': 'dumb-wallet-miniapp/1.0' } });
@@ -46,7 +47,11 @@ module.exports = async function handler(req, res) {
         headers: { 'authorization': `Bearer ${ghToken}`, 'accept': 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'dumb-wallet-miniapp/1.0' },
         body: JSON.stringify({ message: `miniapp: set enabled=${!!enabled}` , content: newContent, sha, branch })
       });
-      if (!pr.ok) throw new Error(`github put ${pr.status}`);
+      if (!pr.ok) {
+        const bodyTxt = await pr.text();
+        console.error('toggle: github put failed', pr.status, bodyTxt);
+        return res.status(502).json({ ok: false, error: 'github-put-failed', status: pr.status, body: bodyTxt });
+      }
       return res.status(200).json({ ok: true, source: 'github-plan', aiEnabled: !!enabled });
     }
     // Option B: forward to a custom toggle backend if provided
