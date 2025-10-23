@@ -89,6 +89,9 @@
           enabled = !!j.aiEnabled
           elStatus.textContent = enabled ? 'AI: on' : 'AI: off'
           elToggle.textContent = enabled ? 'Désactiver' : 'Activer'
+          if (j.source) { elSourceRow.style.display = 'flex'; elSource.textContent = j.source }
+          // Re-fetch status from server after a short delay to reflect plan.json commit
+          setTimeout(refresh, 1200)
         } catch (e) {
           elStatus.textContent = 'error'
           elSourceRow.style.display = 'flex'; elSource.textContent = 'toggle-error'
