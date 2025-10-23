@@ -28,7 +28,8 @@
     <div class="wrap">
       <div class="card">
         <div class="row"><div style="font-weight:700;color:white">Dumb Wallet</div><span class="tag">Mini App</span></div>
-        <div class="row"><div>Status</div><div id="status" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">loading…</div></div>
+  <div class="row"><div>Status</div><div id="status" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">loading…</div></div>
+  <div class="row" id="sourceRow" style="display:none"><div>Source</div><div id="source" class="tag"></div></div>
         <div class="row"><div>AI</div><button id="toggle" class="btn">Activer</button></div>
         <div class="row" id="nextRow" style="display:none"><div>Prochaine exécution</div><div id="next"></div></div>
         <div class="row" id="lastRow" style="display:none"><div>Dernière UserOp</div><div id="uop"></div></div>
@@ -41,8 +42,10 @@
       const elToggle = document.getElementById('toggle')
       const elNextRow = document.getElementById('nextRow')
       const elLastRow = document.getElementById('lastRow')
-      const elNext = document.getElementById('next')
+  const elNext = document.getElementById('next')
       const elUop = document.getElementById('uop')
+  const elSourceRow = document.getElementById('sourceRow')
+  const elSource = document.getElementById('source')
       let enabled = false
       try {
         await sdk.ready()
@@ -56,6 +59,7 @@
           const j = await r.json()
           if (!j.ok) throw new Error(j.error || 'status failed')
           enabled = !!j.aiEnabled
+          if (j.source) { elSourceRow.style.display = 'flex'; elSource.textContent = j.source }
           elStatus.textContent = enabled ? 'AI: on' : 'AI: off'
           if (j.nextRunISO) {
             elNextRow.style.display = 'flex'
@@ -88,6 +92,7 @@
           elToggle.textContent = enabled ? 'Désactiver' : 'Activer'
         } catch (e) {
           elStatus.textContent = 'error'
+          elSourceRow.style.display = 'flex'; elSource.textContent = 'toggle-error'
         }
       })
       refresh()

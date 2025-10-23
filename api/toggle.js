@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     if (ghToken && repo) {
       const api = 'https://api.github.com';
       const getUrl = `${api}/repos/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
-      const gr = await fetch(getUrl, { headers: { 'authorization': `Bearer ${ghToken}`, 'accept': 'application/vnd.github+json' } });
+  const gr = await fetch(getUrl, { headers: { 'authorization': `Bearer ${ghToken}`, 'accept': 'application/vnd.github+json', 'user-agent': 'dumb-wallet-miniapp/1.0' } });
       if (!gr.ok) throw new Error(`github get ${gr.status}`);
       const gjson = await gr.json();
       const sha = gjson.sha;
@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
       const putUrl = `${api}/repos/${repo}/contents/${encodeURIComponent(path)}`;
       const pr = await fetch(putUrl, {
         method: 'PUT',
-        headers: { 'authorization': `Bearer ${ghToken}`, 'accept': 'application/vnd.github+json', 'content-type': 'application/json' },
+        headers: { 'authorization': `Bearer ${ghToken}`, 'accept': 'application/vnd.github+json', 'content-type': 'application/json', 'user-agent': 'dumb-wallet-miniapp/1.0' },
         body: JSON.stringify({ message: `miniapp: set enabled=${!!enabled}` , content: newContent, sha, branch })
       });
       if (!pr.ok) throw new Error(`github put ${pr.status}`);
