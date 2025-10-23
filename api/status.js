@@ -8,7 +8,8 @@ module.exports = async function handler(req, res) {
     const planUrl = process.env.WORKER_PLAN_URL;
     if (planUrl) {
       try {
-        const r = await fetch(planUrl, { headers: { 'accept': 'application/json' } });
+        const url = planUrl.includes('?') ? `${planUrl}&_ts=${Date.now()}` : `${planUrl}?_ts=${Date.now()}`;
+        const r = await fetch(url, { headers: { 'accept': 'application/json', 'cache-control': 'no-cache' } });
         if (r.ok) {
           const plan = await r.json();
           const aiEnabled = typeof plan.enabled === 'boolean'
