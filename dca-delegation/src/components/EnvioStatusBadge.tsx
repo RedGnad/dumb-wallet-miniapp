@@ -1,4 +1,3 @@
-import React from "react";
 import { useEnvioMetrics } from "../hooks/useEnvioMetrics";
 import { getEnvioUrl } from "../lib/envioClient";
 
