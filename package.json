@@ -1,0 +1,9 @@
+{
+  "name": "dumb-wallet-miniapp",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Farcaster Mini App (static UI + serverless API)",
+  "engines": {
+    "node": "18.x"
+  }
+}
